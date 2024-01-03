@@ -15,6 +15,7 @@ import { VFC } from "react";
 import { FaShip } from "react-icons/fa";
 
 import logo from "../assets/logo.png";
+import SearchGame from "./components/SearchGame";
 
 // interface AddMethodArgs {
 //   left: number;
@@ -40,9 +41,12 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
   return (
     <PanelSection title="Panel Section">
       <PanelSectionRow>
+        <SearchGame />
+      </PanelSectionRow>
+      <PanelSectionRow>
         <ButtonItem
           layout="below"
-          onClick={(e) =>
+          onClick={(e: { currentTarget: any; }) =>
             showContextMenu(
               <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => {}}>
                 <MenuItem onSelected={() => {}}>Item #1</MenuItem>
@@ -53,7 +57,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
             )
           }
         >
-          Server says yolo
+          Server FG
         </ButtonItem>
       </PanelSectionRow>
 
@@ -90,13 +94,13 @@ const DeckyPluginRouterTest: VFC = () => {
 };
 
 export default definePlugin((serverApi: ServerAPI) => {
-  serverApi.routerHook.addRoute("/decky-plugin-test", DeckyPluginRouterTest, {
+  serverApi.routerHook.addRoute("/decky-plugin-test", DeckyPluginRouterTest, { //switches to other component with this
     exact: true,
   });
 
   return {
     title: <div className={staticClasses.Title}>Example Plugin</div>,
-    content: <Content serverAPI={serverApi} />,
+    content: <Content serverAPI={serverApi} />, //returns the component at top of file
     icon: <FaShip />,
     onDismount() {
       serverApi.routerHook.removeRoute("/decky-plugin-test");
