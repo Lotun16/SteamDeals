@@ -8,7 +8,7 @@ import {
 	// Router,
 	// ServerAPI,
 } from "decky-frontend-lib";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 
 const SearchGame = () => {
@@ -17,8 +17,18 @@ const SearchGame = () => {
 
 	const [gameDesc, setGameDesc] = useState('No Description Available')
 
-	const [gameName, setGameName] = useState("Default Game Name");
+	const [gameName, setGameName] = useState('');
 
+	const [gameData, setGameData] = useState({
+		id: '',
+		title: '',
+		currentPrice: '',
+		originalPrice: '',
+		originalCut: '',
+		lowestPrice: '',
+		lowestCut: '',
+	})
+	
 	const ITAD_API_KEY = 'aa1c70075662a960294dd85e1dd78cd1ad4d26f7'
 
 	const getGameURL = 'https://api.isthereanydeal.com/v02/search/search/'
@@ -27,7 +37,6 @@ const SearchGame = () => {
 
 	async function getGameInfo(game: string, shop: string){
 		try{
-			console.log('running get game info')
 			const trimmedGameName = game.replace(/ +/g, '');
 			const shopName = shop;
 		
@@ -49,13 +58,13 @@ const SearchGame = () => {
 			console.error('error in get game info: ', err)
 		}
 		return {
-			id: 'blank id',
-			title: 'blank title',
-			currentPrice: 'blank current currentPrice',
-			originalPrice: 'blank originalPrice',
-			originalCut: 'blank originalCut',
-			lowestPrice: 'blank lowestPrice',
-			lowestCut: 'blank lowestCut'
+			id: '',
+			title: '',
+			currentPrice: '',
+			originalPrice: '',
+			originalCut: '',
+			lowestPrice: '',
+			lowestCut: ''
 		};
 	}
 
@@ -113,38 +122,106 @@ const SearchGame = () => {
 		return null;
 	}
 
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const gameInfo  = await getGameInfo(gameName, 'steam')
+
+				const {
+					id,
+					title,
+					currentPrice,
+					originalPrice,
+					originalCut,
+					lowestPrice,
+					lowestCut,
+				} = gameInfo
+
+				console.log('REWQ game info: ', gameInfo)
+
+				// setGameDesc(`${title} [ID: ${id}] is currently ${currentPrice}. The original sale price is ${originalPrice}. This is a deal of ${originalCut}%. The lowest price this game has ever been is ${lowestPrice}, a deal of ${lowestCut}%`);
+
+				setGameData({
+					id,
+					title,
+					currentPrice,
+					originalPrice,
+					originalCut,
+					lowestPrice,
+					lowestCut,
+				  });
+		  
+				setFieldInput('');
+
+			} catch (error) {
+			  console.error('Error fetching data:', error);
+			}
+		  };
+		  if (gameName !== '') {
+			fetchData();
+		  }
+	  
+	  
+	}, [gameName]);
+
 	const handleInputChange = (event: any) => {
 		setFieldInput(event.target.value)
 	}
 
 	const handleTextFieldSubmit = async () => {
+		console.log('REWQ: fieldInput is: ', fieldInput)
 		setGameName(fieldInput);
-		const gameInfo  = await getGameInfo('fallout iv', 'steam')
-		const {
-			id,
-			title,
-			currentPrice,
-			originalPrice,
-			originalCut,
-			lowestPrice,
-			lowestCut,
-		} = gameInfo
-		setGameName(fieldInput)
-		setGameDesc(`${title} [ID: ${id}] is currently ${currentPrice}. The original sale price is ${originalPrice}. This is a deal of ${originalCut}%. The lowest price this game has ever been is ${lowestPrice}, a deal of ${lowestCut}%`)
-		console.log('hello');
 	};
 
 	return (
 		<>
 			Test Section Row Component
 			<p>Please search the name of the game you're looking for:</p>
-			<TextField onChange={(e) => handleInputChange(e)}/>
+			<TextField onChange={(e) => handleInputChange(e)} value={fieldInput}/>
 			<ButtonItem layout="below" onClick={handleTextFieldSubmit}>
 				Submit!
 			</ButtonItem>
-			{gameName}
-			<div>-----</div>
-			{gameDesc}
+			{
+				gameData.title !== '' ?
+				<div>
+					<div>
+						Title: {gameData.title}
+					</div>
+					<div>
+						Id: {gameData.id}
+					</div>
+					<div>
+						Original Price: {gameData.originalPrice}
+					</div>
+					<div>
+						{
+							gameData.currentPrice !== gameData.originalPrice ?
+							<div>
+								Sale Price: {gameData.currentPrice}  {'['} -{gameData.originalCut}% {']'}
+							</div> :
+							<div>
+								Sale Price: {gameData.title} is not currently on sale
+							</div>
+						}
+					</div>
+					<div>
+						{
+							gameData.lowestPrice === '0' ?
+							<div>
+								Historical Low: {gameData.lowestPrice} {'['} -{gameData.lowestCut}% {']'}
+							</div> :
+							<div>
+								Historical Low: {gameData.title} is already at it's lowest price
+							</div>
+						}
+					</div>
+				</div> :
+				<div>
+					Nothing yet
+				</div>
+			}
+			
+
 		</>
 	);
 };
