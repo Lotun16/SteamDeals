@@ -57,7 +57,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
             )
           }
         >
-          Server FG
+          Server FGW
         </ButtonItem>
       </PanelSectionRow>
 
@@ -99,7 +99,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   });
 
   return {
-    title: <div className={staticClasses.Title}>Example Plugin</div>,
+    title: <div className={staticClasses.Title}>Lowest Deal</div>,
     content: <Content serverAPI={serverApi} />, //returns the component at top of file
     icon: <FaShip />,
     onDismount() {
