@@ -1,27 +1,93 @@
 import { ButtonItem, TextField } from "decky-frontend-lib";
 import { useState, useEffect } from "react";
 
-type SearchResult = {
-	id: string;
-	plain: string;
-	title: string;
-};
+const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
+const ITAD_SEARCH_SUFFIXES = {
+    search: '/v02/search/search/',
+    prices: '/v01/game/prices/',
+    lowest: '/v01/game/lowest/'
+}
+
+type ITADApiCallType = 'search' | 'prices' | 'lowest';
+
+type ITADSearchResultItem = {
+    id: number,
+    plain: string,
+    title: string
+}
+
+type ITADLowestResultItem = {
+    price_new: number,
+    price_old: number,
+    price_cut: number,
+    url: string,
+    shop: {
+        id: string,
+        name: string
+    },
+    drm: string[]
+}
+
+type ITADCurrentPriceResultItem = {
+    price: number,
+    cut: number,
+    added: number,
+    shop: {
+        id: string,
+        name: string
+    },
+    urls: { 
+        game: string,
+        history: string
+    }
+}
+interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
+    json: () => Promise<
+        CallType extends 'search' ? { data: { results: ITADSearchResultItem[] } } :
+        CallType extends 'prices' ? { data: { [plainName: string]: { list: ITADLowestResultItem[], urls: { game: string } } } } :
+        CallType extends 'lowest' ? { data: { [plainName: string]: ITADCurrentPriceResultItem } } :
+        never
+        >
+        
+    }
+    
+type ITADApiCallParams<CallType extends ITADApiCallType> = 
+    CallType extends 'search' ? { key: string, q: string, limit?: string, strict?: string } :
+    CallType extends 'prices' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, added?: string } :
+    CallType extends 'lowest' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, since?: string, until?: string, new?: string } :
+    never;
+
+type GameData = {
+    id: string | number,
+    title: string,
+    currentPrice: string | number,
+    originalPrice: string | number,
+    originalCut: string | number,
+    lowestPrice: string | number,
+    lowestCut: string | number
+}
+
+async function fetchITAD<CallType extends ITADApiCallType>(callType: CallType, params: ITADApiCallParams<CallType>): Promise<ITADApiResponse<CallType>> {
+    const urly = new URL(ITAD_SEARCH_SUFFIXES[callType], ITAD_BASE_URL);
+    Object.entries(params).forEach(([key, value]) => urly.searchParams.append(key, value));
+    return await fetch(urly);
+}
 
 const SearchGame = () => {
 	const [fieldInput, setFieldInput] = useState("");
 
 	const [gameName, setGameName] = useState("");
 
-	const [selectedGame, setSelectedGame] = useState<SearchResult>({
-		id: "",
+	const [selectedGame, setSelectedGame] = useState<ITADSearchResultItem>({
+		id: 0,
 		plain: "",
 		title: "",
 	});
 
-	const [gameSearchList, setGameSearchList] = useState<SearchResult[]>([]);
+	const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
 
-	const [gameData, setGameData] = useState({
-		id: "",
+	const [gameData, setGameData] = useState<GameData>({
+		id: 0,
 		title: "",
 		currentPrice: "",
 		originalPrice: "",
@@ -32,11 +98,8 @@ const SearchGame = () => {
 
 	const ITAD_API_KEY = "aa1c70075662a960294dd85e1dd78cd1ad4d26f7";
 
-	const getGameURL = "https://api.isthereanydeal.com/v02/search/search/";
-	const priceURL = "https://api.isthereanydeal.com/v01/game/prices/";
-	const historicalURL = "https://api.isthereanydeal.com/v01/game/lowest/";
 
-	async function getGameInfo(gameData: SearchResult, shop: string) {
+	async function getGameInfo(gameData: ITADSearchResultItem, shop: string) {
 		try {
 			const shopName = shop;
 
@@ -49,42 +112,28 @@ const SearchGame = () => {
 			return {
 				id: gameData.id,
 				title: gameData.title,
-				currentPrice: currentPriceData?.newPrice,
-				originalPrice: currentPriceData?.originalPrice,
-				originalCut: currentPriceData?.percentageCut,
-				lowestPrice: historicalLowData?.lowestPrice,
-				lowestCut: historicalLowData?.percentageCut,
+				currentPrice: currentPriceData!.newPrice,
+				originalPrice: currentPriceData!.originalPrice,
+				originalCut: currentPriceData!.percentageCut,
+				lowestPrice: historicalLowData!.lowestPrice,
+				lowestCut: historicalLowData!.percentageCut,
 			};
 		} catch (err) {
 			console.error("error in get game info: ", err);
 		}
-		return {
-			id: "",
-			title: "",
-			currentPrice: "",
-			originalPrice: "",
-			originalCut: "",
-			lowestPrice: "",
-			lowestCut: "",
-		};
+		return null;
 	}
 
-	async function getMultipleGames(game: string) {
-		const urly = new URL(getGameURL);
-		const plainArray = [];
-
-		urly.searchParams.append("key", ITAD_API_KEY);
-		urly.searchParams.append("q", game);
-		urly.searchParams.append("limit", "10");
-		urly.searchParams.append("strict", "0");
-
-		try {
-			const response = await fetch(urly);
+	async function getSearchResults(query: string) {
+		const params = {
+            key: ITAD_API_KEY,
+		    q: query,
+		    limit: '10',
+		    strict: '0'
+        }
+		try{
+			const response = await fetchITAD('search', params);
 			const res = await response.json();
-			for (const game of res?.data?.results) {
-				plainArray.push(game);
-			}
-			setGameSearchList(plainArray);
 			return res?.data?.results;
 		} catch (err) {
 			console.error("error in get multiple game: ", err);
@@ -93,13 +142,14 @@ const SearchGame = () => {
 	}
 
 	async function getPrice(game: string, shop: string) {
-		const urly = new URL(priceURL);
-		urly.searchParams.append("key", ITAD_API_KEY);
-		urly.searchParams.append("plains", game);
-		urly.searchParams.append("shops", shop);
+		const params = {
+            key: ITAD_API_KEY,
+            plains: game,
+            shops: shop
+        }
 
-		try {
-			const response = await fetch(urly);
+		try{
+			const response = await fetchITAD('prices', params);
 			const res = await response.json();
 			const [newPrice, originalPrice, percentageCut] = [
 				res.data[game].list[0]?.price_new,
@@ -114,13 +164,14 @@ const SearchGame = () => {
 	}
 
 	async function getHistoricalLow(game: string, shop: string) {
-		const urly = new URL(historicalURL);
-		urly.searchParams.append("key", ITAD_API_KEY);
-		urly.searchParams.append("plains", game);
-		urly.searchParams.append("shops", shop);
-
-		try {
-			const response = await fetch(urly);
+        const params = {
+            key: ITAD_API_KEY,
+            plains: game,
+            shops: shop
+        }
+	
+		try{
+			const response = await fetchITAD('lowest', params);
 			const res = await response.json();
 			const [lowestPrice, percentageCut] = [
 				res.data[game]?.price,
@@ -139,11 +190,12 @@ const SearchGame = () => {
 				if (gameName === "") {
 					return;
 				}
-				const multiGameInfo = await getMultipleGames(gameName);
-				setGameSearchList(multiGameInfo);
+				const searchResults = await getSearchResults(gameName);
+                console.log(searchResults)
+				setGameSearchList(searchResults!);
 				setFieldInput("");
 				setSelectedGame({
-					id: "",
+					id: 0,
 					title: "",
 					plain: "",
 				});
@@ -179,7 +231,7 @@ const SearchGame = () => {
 					originalCut,
 					lowestPrice,
 					lowestCut,
-				} = singleGameInfo;
+				} = singleGameInfo!;
 
 				setGameSearchList([]);
 
@@ -207,7 +259,7 @@ const SearchGame = () => {
 		setGameName(fieldInput);
 	};
 
-	const handleGameSelect = async (id: string, plain: string, title: string) => {
+	const handleGameSelect = async (id: number, plain: string, title: string) => {
 		console.log("title is: ", title, " plain is: ", plain, "id is: ", id);
 		setSelectedGame({
 			id: id,
@@ -257,7 +309,7 @@ const SearchGame = () => {
 				) : (
 					<div>
 						{gameSearchList
-							? gameSearchList.map((singleGame: SearchResult) => (
+							? gameSearchList.map((singleGame: ITADSearchResultItem) => (
 									<div key={singleGame.id}>
 										<ButtonItem
 											layout="below"
