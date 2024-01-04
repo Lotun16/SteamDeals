@@ -1,11 +1,8 @@
-import {
-	ButtonItem,
-	TextField,
-} from "decky-frontend-lib";
+import { ButtonItem, TextField } from "decky-frontend-lib";
 import { useState, useEffect } from "react";
 
 type SearchResult = {
-	id: number;
+	id: string;
 	plain: string;
 	title: string;
 };
@@ -16,7 +13,7 @@ const SearchGame = () => {
 	const [gameName, setGameName] = useState("");
 
 	const [selectedGame, setSelectedGame] = useState<SearchResult>({
-		id: -1,
+		id: "",
 		plain: "",
 		title: "",
 	});
@@ -50,7 +47,7 @@ const SearchGame = () => {
 			);
 
 			return {
-				id: gameData.id.toString(),
+				id: gameData.id,
 				title: gameData.title,
 				currentPrice: currentPriceData?.newPrice,
 				originalPrice: currentPriceData?.originalPrice,
@@ -87,7 +84,6 @@ const SearchGame = () => {
 			for (const game of res?.data?.results) {
 				plainArray.push(game);
 			}
-			// console.log("REWQ plain array from multisearch: ", plainArray);
 			setGameSearchList(plainArray);
 			return res?.data?.results;
 		} catch (err) {
@@ -144,9 +140,22 @@ const SearchGame = () => {
 					return;
 				}
 				const multiGameInfo = await getMultipleGames(gameName);
-				// console.log("REWQ Multi Game Info:", multiGameInfo);
 				setGameSearchList(multiGameInfo);
 				setFieldInput("");
+				setSelectedGame({
+					id: "",
+					title: "",
+					plain: "",
+				});
+				setGameData({ 
+					id: "",
+					title: "",
+					currentPrice: "",
+					originalPrice: "",
+					originalCut: "",
+					lowestPrice: "",
+					lowestCut: "",
+				});
 			} catch (error) {
 				console.error("Error fetching data:", error);
 			}
@@ -172,8 +181,7 @@ const SearchGame = () => {
 					lowestCut,
 				} = singleGameInfo;
 
-				// console.log("REWQ Game Info:", gameInfo);
-				// console.log("REWQ Single Game Info:", singleGameInfo);
+				setGameSearchList([]);
 
 				setGameData({
 					id,
@@ -196,34 +204,16 @@ const SearchGame = () => {
 	};
 
 	const handleTextFieldSubmit = async () => {
-		// setSelectedGame({
-		// 	id: -1,
-		// 	title: '',
-		// 	plain: ''
-		// })
-		// setGameData({
-		// 	id: "",
-		// 	title: "",
-		// 	currentPrice: "",
-		// 	originalPrice: "",
-		// 	originalCut: "",
-		// 	lowestPrice: "",
-		// 	lowestCut: "",
-		// })
 		setGameName(fieldInput);
-		console.log('REWQ game list: ', gameSearchList)
-		console.log('REWQ game data: ', gameData)
 	};
 
-	const handleGameSelect = async (id: number, plain: string, title: string) => {
+	const handleGameSelect = async (id: string, plain: string, title: string) => {
 		console.log("title is: ", title, " plain is: ", plain, "id is: ", id);
 		setSelectedGame({
 			id: id,
 			plain: plain,
 			title: title,
 		});
-		console.log('REWQ SELECT game list: ', gameSearchList)
-		console.log('REWQ SELECT game data: ', gameData)
 	};
 
 	return (
