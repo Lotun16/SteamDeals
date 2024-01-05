@@ -40,25 +40,34 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
 
   return (
     <PanelSection title="Panel Section">
-      <PanelSectionRow>
+      {/* <PanelSectionRow>
         <SearchGame />
-      </PanelSectionRow>
+      </PanelSectionRow> */}
       <PanelSectionRow>
         <ButtonItem
-          layout="below"
-          onClick={(e: { currentTarget: any; }) =>
-            showContextMenu(
-              <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => {}}>
-                <MenuItem onSelected={() => {}}>Item #1</MenuItem>
-                <MenuItem onSelected={() => {}}>Item #2</MenuItem>
-                <MenuItem onSelected={() => {}}>Item #3</MenuItem>
-              </Menu>,
-              e.currentTarget ?? window
-            )
-          }
-        >
-          Server FGW
-        </ButtonItem>
+            layout="below"
+            onClick={() => {
+              Router.CloseSideMenus();
+              Router.Navigate("/search-game");
+            }}
+          >
+            Actual App
+          </ButtonItem>
+          {/* <ButtonItem
+            layout="below"
+            onClick={(e: { currentTarget: any; }) =>
+              showContextMenu(
+                <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => {}}>
+                  <MenuItem onSelected={() => {}}>Item #1</MenuItem>
+                  <MenuItem onSelected={() => {}}>Item #2</MenuItem>
+                  <MenuItem onSelected={() => {}}>Item #3</MenuItem>
+                </Menu>,
+                e.currentTarget ?? window
+              )
+            }
+          >
+            Server FGW
+          </ButtonItem> */}
       </PanelSectionRow>
 
       <PanelSectionRow>
@@ -77,6 +86,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
         >
           Router
         </ButtonItem>
+        
       </PanelSectionRow>
     </PanelSection>
   );
@@ -95,6 +105,9 @@ const DeckyPluginRouterTest: VFC = () => {
 
 export default definePlugin((serverApi: ServerAPI) => {
   serverApi.routerHook.addRoute("/decky-plugin-test", DeckyPluginRouterTest, { //switches to other component with this
+    exact: true,
+  });
+  serverApi.routerHook.addRoute("/search-game", SearchGame, { //switches to other component with this
     exact: true,
   });
 

@@ -41,15 +41,15 @@ type ITADCurrentPriceResultItem = {
         history: string
     }
 }
+
 interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
     json: () => Promise<
         CallType extends 'search' ? { data: { results: ITADSearchResultItem[] } } :
         CallType extends 'prices' ? { data: { [plainName: string]: { list: ITADLowestResultItem[], urls: { game: string } } } } :
         CallType extends 'lowest' ? { data: { [plainName: string]: ITADCurrentPriceResultItem } } :
         never
-        >
-        
-    }
+    >
+}
     
 type ITADApiCallParams<CallType extends ITADApiCallType> = 
     CallType extends 'search' ? { key: string, q: string, limit?: string, strict?: string } :
@@ -75,16 +75,14 @@ async function fetchITAD<CallType extends ITADApiCallType>(callType: CallType, p
 
 const SearchGame = () => {
 	const [fieldInput, setFieldInput] = useState("");
-
 	const [gameName, setGameName] = useState("");
+	const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
 
 	const [selectedGame, setSelectedGame] = useState<ITADSearchResultItem>({
 		id: 0,
 		plain: "",
 		title: "",
 	});
-
-	const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
 
 	const [gameData, setGameData] = useState<GameData>({
 		id: 0,
@@ -188,12 +186,11 @@ const SearchGame = () => {
 		const fetchData = async () => {
 			try {
 				if (gameName === "") {
+					setGameSearchList([]);
 					return;
 				}
 				const searchResults = await getSearchResults(gameName);
-                console.log(searchResults)
 				setGameSearchList(searchResults!);
-				setFieldInput("");
 				setSelectedGame({
 					id: 0,
 					title: "",
@@ -253,10 +250,12 @@ const SearchGame = () => {
 
 	const handleInputChange = (event: any) => {
 		setFieldInput(event.target.value);
+		setGameName(event.target.value)
 	};
 
-	const handleTextFieldSubmit = async () => {
-		setGameName(fieldInput);
+	const handleReset = async () => {
+		setFieldInput("");
+		setGameName("");
 	};
 
 	const handleGameSelect = async (id: number, plain: string, title: string) => {
@@ -273,8 +272,8 @@ const SearchGame = () => {
 			Test Section Row Component
 			<p>Please search the name of the game you're looking for:</p>
 			<TextField onChange={(e) => handleInputChange(e)} value={fieldInput} />
-			<ButtonItem layout="below" onClick={handleTextFieldSubmit}>
-				Submit!
+			<ButtonItem layout="below" onClick={handleReset}>
+				Reset
 			</ButtonItem>
 			<div>
 				{gameData.title !== "" ? (
