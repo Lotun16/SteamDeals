@@ -1,14 +1,15 @@
-import { ButtonItem, TextField } from "decky-frontend-lib";
+import { ButtonItem, TextField, ScrollPanel, ScrollPanelGroup } from "decky-frontend-lib";
 import { useState, useEffect } from "react";
 
 const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
 const ITAD_SEARCH_SUFFIXES = {
     search: '/v02/search/search/',
     prices: '/v01/game/prices/',
-    lowest: '/v01/game/lowest/'
+    lowest: '/v01/game/lowest/',
+	image: '/v01/game/info',
 }
 
-type ITADApiCallType = 'search' | 'prices' | 'lowest';
+type ITADApiCallType = 'search' | 'prices' | 'lowest' | 'image';
 
 type ITADSearchResultItem = {
     id: number,
@@ -42,11 +43,17 @@ type ITADCurrentPriceResultItem = {
     }
 }
 
+type ITADImageResultItem = {
+	title: string,
+	image: string,
+}
+
 interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
     json: () => Promise<
         CallType extends 'search' ? { data: { results: ITADSearchResultItem[] } } :
         CallType extends 'prices' ? { data: { [plainName: string]: { list: ITADLowestResultItem[], urls: { game: string } } } } :
         CallType extends 'lowest' ? { data: { [plainName: string]: ITADCurrentPriceResultItem } } :
+        CallType extends 'image' ? { data: { [plainName: string]: ITADImageResultItem } } :
         never
     >
 }
@@ -55,6 +62,7 @@ type ITADApiCallParams<CallType extends ITADApiCallType> =
     CallType extends 'search' ? { key: string, q: string, limit?: string, strict?: string } :
     CallType extends 'prices' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, added?: string } :
     CallType extends 'lowest' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, since?: string, until?: string, new?: string } :
+    CallType extends 'image' ? { key: string, plains: string } :
     never;
 
 type GameData = {
@@ -64,7 +72,8 @@ type GameData = {
     originalPrice: string | number,
     originalCut: string | number,
     lowestPrice: string | number,
-    lowestCut: string | number
+    lowestCut: string | number,
+	imageURL: string
 }
 
 async function fetchITAD<CallType extends ITADApiCallType>(callType: CallType, params: ITADApiCallParams<CallType>): Promise<ITADApiResponse<CallType>> {
@@ -92,6 +101,7 @@ const SearchGame = () => {
 		originalCut: "",
 		lowestPrice: "",
 		lowestCut: "",
+		imageURL: ""
 	});
 
 	const ITAD_API_KEY = "aa1c70075662a960294dd85e1dd78cd1ad4d26f7";
@@ -102,10 +112,10 @@ const SearchGame = () => {
 			const shopName = shop;
 
 			const currentPriceData = await getPrice(gameData.plain, shopName);
-			const historicalLowData = await getHistoricalLow(
-				gameData.plain,
-				shopName
-			);
+			const historicalLowData = await getHistoricalLow(gameData.plain, shopName);
+			const imageData = await getImage(gameData.plain)
+
+			console.log('image url: ', imageData);
 
 			return {
 				id: gameData.id,
@@ -115,6 +125,7 @@ const SearchGame = () => {
 				originalCut: currentPriceData!.percentageCut,
 				lowestPrice: historicalLowData!.lowestPrice,
 				lowestCut: historicalLowData!.percentageCut,
+				imageURL: imageData!
 			};
 		} catch (err) {
 			console.error("error in get game info: ", err);
@@ -138,6 +149,22 @@ const SearchGame = () => {
 		}
 		return null;
 	}
+
+	async function getImage(game: string) {
+		const params = {
+            key: ITAD_API_KEY,
+            plains: game,
+        }
+
+		try{
+			const response = await fetchITAD('image', params);
+			const res = await response.json();
+			return res.data[game]?.image;
+		} catch (err) {
+			console.error("error in get game image: ", err);
+		}
+		return null;
+	} 
 
 	async function getPrice(game: string, shop: string) {
 		const params = {
@@ -190,6 +217,8 @@ const SearchGame = () => {
 					return;
 				}
 				const searchResults = await getSearchResults(gameName);
+
+				console.log('search results: ', searchResults);
 				setGameSearchList(searchResults!);
 				setSelectedGame({
 					id: 0,
@@ -204,6 +233,7 @@ const SearchGame = () => {
 					originalCut: "",
 					lowestPrice: "",
 					lowestCut: "",
+					imageURL: ""
 				});
 			} catch (error) {
 				console.error("Error fetching data:", error);
@@ -228,6 +258,7 @@ const SearchGame = () => {
 					originalCut,
 					lowestPrice,
 					lowestCut,
+					imageURL
 				} = singleGameInfo!;
 
 				setGameSearchList([]);
@@ -240,6 +271,7 @@ const SearchGame = () => {
 					originalCut,
 					lowestPrice,
 					lowestCut,
+					imageURL
 				});
 			} catch (error) {
 				console.error("Error fetching data:", error);
@@ -259,7 +291,7 @@ const SearchGame = () => {
 	};
 
 	const handleGameSelect = async (id: number, plain: string, title: string) => {
-		console.log("title is: ", title, " plain is: ", plain, "id is: ", id);
+		console.log("title is: ", title, "| plain is: ", plain, "| id is: ", id);
 		setSelectedGame({
 			id: id,
 			plain: plain,
@@ -268,67 +300,75 @@ const SearchGame = () => {
 	};
 
 	return (
-		<>
-			Test Section Row Component
-			<p>Please search the name of the game you're looking for:</p>
-			<TextField onChange={(e) => handleInputChange(e)} value={fieldInput} />
-			<ButtonItem layout="below" onClick={handleReset}>
-				Reset
-			</ButtonItem>
-			<div>
-				{gameData.title !== "" ? (
-					<div>
-						<div>Title: {gameData.title}</div>
-						<div>Id: {gameData.id}</div>
-						<div>Original Price: {gameData.originalPrice}</div>
-						<div>
-							{gameData.currentPrice !== gameData.originalPrice ? (
+		<div style={{overflow: 'hidden', marginTop: '50px', marginBottom: '75px'}}>
+			{/* <ScrollPanelGroup> */}
+				<ScrollPanel>
+					Test Row
+					<h1>Lowest Deal Search</h1>
+					<p>Please search the name of the game you're looking for:</p>
+					<TextField onChange={(e) => handleInputChange(e)} value={fieldInput} />
+					<ButtonItem layout="below" onClick={handleReset}>
+						Reset
+					</ButtonItem>
+					<div style={{marginBottom: '50px'}}>
+						{gameData.title !== "" ? (
+							<div style={{display: "flex", flexBasis: 2}}>
 								<div>
-									Sale Price: {gameData.currentPrice} {"["} -
-									{gameData.originalCut}% {"]"}
+									<img src={gameData.imageURL} />
 								</div>
-							) : (
-								<div>Sale Price: {gameData.title} is not currently on sale</div>
-							)}
-						</div>
-						<div>
-							{gameData.lowestPrice !== "0" ? (
-								<div>
-									Historical Low: {gameData.lowestPrice} {"["} -
-									{gameData.lowestCut}% {"]"}
-								</div>
-							) : (
-								<div>
-									Historical Low: {gameData.title} is already at it's lowest
-									price
-								</div>
-							)}
-						</div>
-					</div>
-				) : (
-					<div>
-						{gameSearchList
-							? gameSearchList.map((singleGame: ITADSearchResultItem) => (
-									<div key={singleGame.id}>
-										<ButtonItem
-											layout="below"
-											onClick={() =>
-												handleGameSelect(
-													singleGame.id,
-													singleGame.plain,
-													singleGame.title
-												)
-											}
-										>
-											{singleGame.title}
-										</ButtonItem>
+								<div style={{display: 'flex', flexDirection: 'column', marginLeft: '10px'}}>
+									<h1>{gameData.title}</h1>
+									<div>ID: {gameData.id}</div>
+									<div>Original Price: {gameData.originalPrice}</div>
+									<div>
+										{gameData.currentPrice !== gameData.originalPrice ? (
+											<div>
+												Sale Price: {gameData.currentPrice} {"["} - {gameData.originalCut}% {"]"}
+											</div>
+										) : (
+											<div>Sale Price: {gameData.title} is not currently on sale</div>
+										)}
 									</div>
-							  ))
-							: null}
+									<div>
+										{(gameData.lowestPrice !== "0" && gameData.lowestPrice !== 0) ? (
+											<div>
+												Historical Low: {gameData.lowestPrice} {"["} - {gameData.lowestCut}% {"]"}
+											</div>
+										) : (
+											<div>
+												Historical Low: {gameData.title} is already at it's lowest price
+											</div>
+										)}
+									</div>
+								</div>
+				
+							</div>
+						) : (
+							<div>
+								{gameSearchList
+									? gameSearchList.map((singleGame: ITADSearchResultItem) => (
+											<div key={singleGame.id}>
+												<ButtonItem
+													layout="below"
+													onClick={() =>
+														handleGameSelect(
+															singleGame.id,
+															singleGame.plain,
+															singleGame.title
+														)
+													}
+												>
+													{singleGame.title}
+												</ButtonItem>
+											</div>
+									  ))
+									: null}
+							</div>
+						)}
 					</div>
-				)}
-			</div>
-		</>
+				</ScrollPanel>
+			{/* </ScrollPanelGroup> */}
+		</div>
 	);
 };
 

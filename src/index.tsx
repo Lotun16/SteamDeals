@@ -44,6 +44,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
         <SearchGame />
       </PanelSectionRow> */}
       <PanelSectionRow>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <img src={logo} />
+        </div>
+      </PanelSectionRow>
+      <PanelSectionRow>
         <ButtonItem
             layout="below"
             onClick={() => {
@@ -51,7 +56,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
               Router.Navigate("/search-game");
             }}
           >
-            Actual App
+            Application
           </ButtonItem>
           {/* <ButtonItem
             layout="below"
@@ -68,12 +73,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
           >
             Server FGW
           </ButtonItem> */}
-      </PanelSectionRow>
-
-      <PanelSectionRow>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img src={logo} />
-        </div>
       </PanelSectionRow>
 
       <PanelSectionRow>
