@@ -1,5 +1,6 @@
-import { ButtonItem, TextField, ScrollPanel, ScrollPanelGroup } from "decky-frontend-lib";
-import { useState, useEffect } from "react";
+import { ButtonItem, DialogButton, Field, Focusable, Panel, PanelSection, PanelSectionRow, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { ScrollableWindow } from './ScrollableWindow';
 
 const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
 const ITAD_SEARCH_SUFFIXES = {
@@ -86,6 +87,7 @@ const SearchGame = () => {
 	const [fieldInput, setFieldInput] = useState("");
 	const [gameName, setGameName] = useState("");
 	const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
+    const [fixedDivHeight, setFixedDivHeight] = useState(0);
 
 	const [selectedGame, setSelectedGame] = useState<ITADSearchResultItem>({
 		id: 0,
@@ -105,7 +107,11 @@ const SearchGame = () => {
 	});
 
 	const ITAD_API_KEY = "aa1c70075662a960294dd85e1dd78cd1ad4d26f7";
+    const fixedDivRef = useRef<HTMLDivElement>(null);
 
+    useLayoutEffect(() => {
+        if (fixedDivRef.current) setFixedDivHeight(fixedDivRef.current.offsetHeight);
+    }, []);
 
 	async function getGameInfo(gameData: ITADSearchResultItem, shop: string) {
 		try {
@@ -299,77 +305,96 @@ const SearchGame = () => {
 		});
 	};
 
-	return (
-		<div style={{overflow: 'hidden', marginTop: '50px', marginBottom: '75px'}}>
-			{/* <ScrollPanelGroup> */}
-				<ScrollPanel>
-					Test Row
-					<h1>Lowest Deal Search</h1>
-					<p>Please search the name of the game you're looking for:</p>
-					<TextField onChange={(e) => handleInputChange(e)} value={fieldInput} />
-					<ButtonItem layout="below" onClick={handleReset}>
-						Reset
-					</ButtonItem>
-					<div style={{marginBottom: '50px'}}>
-						{gameData.title !== "" ? (
-							<div style={{display: "flex", flexBasis: 2}}>
-								<div>
-									<img src={gameData.imageURL} />
-								</div>
-								<div style={{display: 'flex', flexDirection: 'column', marginLeft: '10px'}}>
-									<h1>{gameData.title}</h1>
-									<div>ID: {gameData.id}</div>
-									<div>Original Price: {gameData.originalPrice}</div>
-									<div>
-										{gameData.currentPrice !== gameData.originalPrice ? (
-											<div>
-												Sale Price: {gameData.currentPrice} {"["} - {gameData.originalCut}% {"]"}
-											</div>
-										) : (
-											<div>Sale Price: {gameData.title} is not currently on sale</div>
-										)}
-									</div>
-									<div>
-										{(gameData.lowestPrice !== "0" && gameData.lowestPrice !== 0) ? (
-											<div>
-												Historical Low: {gameData.lowestPrice} {"["} - {gameData.lowestCut}% {"]"}
-											</div>
-										) : (
-											<div>
-												Historical Low: {gameData.title} is already at it's lowest price
-											</div>
-										)}
-									</div>
-								</div>
-				
-							</div>
-						) : (
-							<div>
-								{gameSearchList
-									? gameSearchList.map((singleGame: ITADSearchResultItem) => (
-											<div key={singleGame.id}>
-												<ButtonItem
-													layout="below"
-													onClick={() =>
-														handleGameSelect(
-															singleGame.id,
-															singleGame.plain,
-															singleGame.title
-														)
-													}
-												>
-													{singleGame.title}
-												</ButtonItem>
-											</div>
-									  ))
-									: null}
-							</div>
-						)}
-					</div>
-				</ScrollPanel>
-			{/* </ScrollPanelGroup> */}
-		</div>
-	);
+    return (
+        <>
+            <style>{`
+            .search-game-container .${gamepadDialogClasses.FieldDescription} {
+                margin: 0;
+            }
+            .search-game-container .${quickAccessControlsClasses.PanelSectionRow}>:first-child {
+                padding: 0 16px;
+            }
+            `}</style>
+            <div className='search-game-container' style={{ position: 'absolute', width: '100%', top: 'var(--basicui-header-height)', bottom: 'var(--gamepadui-current-footer-height)' }}>
+                <div ref={fixedDivRef}>
+                    <h1 style={{ margin: 0, padding: '15px 20px 5px' }}> {/* margin needs to be 0 for the height calculation to be correct */}
+                        Lowest Deal Search
+                    </h1>
+                    <Field description={
+                        <Focusable style={{ display: "flex", flexDirection: "row", gap: '10px', padding: '0 16px' }}>
+                            <div style={{ width: "100%" }}>
+
+                                <TextField placeholder='Search Game' onChange={(e) => handleInputChange(e)} value={fieldInput} />
+                            </div>
+                            <DialogButton style={{ width: '100px', minWidth: '100px' }} onClick={handleReset}>
+                                Reset
+                            </DialogButton>
+                        </Focusable>}
+                    />
+                </div>
+                <ScrollableWindow fadeAmount='12px' height={`calc(100% - ${fixedDivHeight}px)`} scrollBarWidth='0px'>
+                    <PanelSectionRow>
+                        <div style={{ marginBottom: '50px' }}>
+                            {gameData.title !== "" ? (
+                                <div style={{ display: "flex", flexBasis: 2, padding: '20px 8px' }}>
+                                    <div>
+                                        <img src={gameData.imageURL} />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>
+                                        <h1>{gameData.title}</h1>
+                                        <div>ID: {gameData.id}</div>
+                                        <div>Original Price: {gameData.originalPrice}</div>
+                                        <div>
+                                            {gameData.currentPrice !== gameData.originalPrice ? (
+                                                <div>
+                                                    Sale Price: {gameData.currentPrice} {"["} - {gameData.originalCut}% {"]"}
+                                                </div>
+                                            ) : (
+                                                <div>Sale Price: {gameData.title} is not currently on sale</div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            {(gameData.lowestPrice !== "0" && gameData.lowestPrice !== 0) ? (
+                                                <div>
+                                                    Historical Low: {gameData.lowestPrice} {"["} - {gameData.lowestCut}% {"]"}
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    Historical Low: {gameData.title} is already at it's lowest price
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            ) : (
+                                <div>
+                                    {gameSearchList
+                                        ? gameSearchList.map((singleGame: ITADSearchResultItem) => (
+                                            <div key={singleGame.id}>
+                                                <ButtonItem
+                                                    layout="below"
+                                                    onClick={() =>
+                                                        handleGameSelect(
+                                                            singleGame.id,
+                                                            singleGame.plain,
+                                                            singleGame.title
+                                                        )
+                                                    }
+                                                >
+                                                    {singleGame.title}
+                                                </ButtonItem>
+                                            </div>
+                                        ))
+                                        : null}
+                                </div>
+                            )}
+                        </div>
+                    </PanelSectionRow>
+                </ScrollableWindow>
+            </div>
+        </>
+    );
 };
 
 export default SearchGame;
