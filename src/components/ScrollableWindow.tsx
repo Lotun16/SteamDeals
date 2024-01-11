@@ -17,6 +17,7 @@ export const ScrollableWindow: FC<ScrollableWindowProps> = ({ height, fadeAmount
     //@ts-ignore
     <ScrollPanelGroup ref={scrollPanelRef} focusable={false} style={{ flex: 1, minHeight: 0 }}>
       <Focusable
+        style={{ height: '100%' }}
         //@ts-ignore
         focusable={isOverflowing}
         noFocusRing={true}

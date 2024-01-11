@@ -1,4 +1,4 @@
-import { ButtonItem, DialogButton, Field, Focusable, Panel, PanelSection, PanelSectionRow, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
+import { ButtonItem, DialogButton, Field, Focusable, Panel, PanelSection, PanelSectionRow, SteamSpinner, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { ScrollableWindow } from './ScrollableWindow';
 
@@ -88,6 +88,7 @@ const SearchGame = () => {
 	const [gameName, setGameName] = useState("");
 	const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
     const [fixedDivHeight, setFixedDivHeight] = useState(0);
+    const [showGame, setShowGame] = useState(false);
 
 	const [selectedGame, setSelectedGame] = useState<ITADSearchResultItem>({
 		id: 0,
@@ -289,15 +290,18 @@ const SearchGame = () => {
 	const handleInputChange = (event: any) => {
 		setFieldInput(event.target.value);
 		setGameName(event.target.value)
+        setShowGame(false);
 	};
 
 	const handleReset = async () => {
 		setFieldInput("");
 		setGameName("");
+        setShowGame(false);
 	};
 
 	const handleGameSelect = async (id: number, plain: string, title: string) => {
 		console.log("title is: ", title, "| plain is: ", plain, "| id is: ", id);
+        setShowGame(true);
 		setSelectedGame({
 			id: id,
 			plain: plain,
@@ -313,6 +317,9 @@ const SearchGame = () => {
             }
             .search-game-container .${quickAccessControlsClasses.PanelSectionRow}>:first-child {
                 padding: 0 16px;
+            }
+            .search-game-container .loadingthrobber_ContainerBackground_2ngG3 {
+                background: transparent;
             }
             `}</style>
             <div className='search-game-container' style={{ position: 'absolute', width: '100%', top: 'var(--basicui-header-height)', bottom: 'var(--gamepadui-current-footer-height)' }}>
@@ -333,64 +340,74 @@ const SearchGame = () => {
                     />
                 </div>
                 <ScrollableWindow fadeAmount='12px' height={`calc(100% - ${fixedDivHeight}px)`} scrollBarWidth='0px'>
-                    <PanelSectionRow>
-                        <div style={{ marginBottom: '50px' }}>
-                            {gameData.title !== "" ? (
-                                <div style={{ display: "flex", flexBasis: 2, padding: '20px 8px' }}>
-                                    <div>
-                                        <img src={gameData.imageURL} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>
-                                        <h1>{gameData.title}</h1>
-                                        <div>ID: {gameData.id}</div>
-                                        <div>Original Price: {gameData.originalPrice}</div>
-                                        <div>
-                                            {gameData.currentPrice !== gameData.originalPrice ? (
-                                                <div>
-                                                    Sale Price: {gameData.currentPrice} {"["} - {gameData.originalCut}% {"]"}
-                                                </div>
-                                            ) : (
-                                                <div>Sale Price: {gameData.title} is not currently on sale</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            {(gameData.lowestPrice !== "0" && gameData.lowestPrice !== 0) ? (
-                                                <div>
-                                                    Historical Low: {gameData.lowestPrice} {"["} - {gameData.lowestCut}% {"]"}
-                                                </div>
-                                            ) : (
-                                                <div>
-                                                    Historical Low: {gameData.title} is already at it's lowest price
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                </div>
-                            ) : (
+                    {showGame ? (
+                        gameData.title !== "" ? (
+                            <div style={{ display: "flex", flexBasis: 2, padding: '20px 25px' }}>
                                 <div>
-                                    {gameSearchList
-                                        ? gameSearchList.map((singleGame: ITADSearchResultItem) => (
-                                            <div key={singleGame.id}>
-                                                <ButtonItem
-                                                    layout="below"
-                                                    onClick={() =>
-                                                        handleGameSelect(
-                                                            singleGame.id,
-                                                            singleGame.plain,
-                                                            singleGame.title
-                                                        )
-                                                    }
-                                                >
-                                                    {singleGame.title}
-                                                </ButtonItem>
-                                            </div>
-                                        ))
-                                        : null}
+                                    <img src={gameData.imageURL} />
                                 </div>
-                            )}
-                        </div>
-                    </PanelSectionRow>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>
+                                    <h1>{gameData.title}</h1>
+                                    <div>ID: {gameData.id}</div>
+                                    <div>Original Price: {gameData.originalPrice}</div>
+                                    <div>
+                                        {gameData.currentPrice !== gameData.originalPrice ? (
+                                            <div>
+                                                Sale Price: {gameData.currentPrice} {"["} - {gameData.originalCut}% {"]"}
+                                            </div>
+                                        ) : (
+                                            <div>Sale Price: {gameData.title} is not currently on sale</div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        {(gameData.lowestPrice !== "0" && gameData.lowestPrice !== 0) ? (
+                                            <div>
+                                                Historical Low: {gameData.lowestPrice} {"["} - {gameData.lowestCut}% {"]"}
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                Historical Low: {gameData.title} is already at it's lowest price
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: '100%'
+                                }}>
+                                <img alt="Loading..." src="/images/steam_spinner.png" style={{ width: '150px' }} />
+                            </div>
+                        )
+                    ) : (
+                        <PanelSectionRow>
+                            <div>
+                                {gameSearchList
+                                    ? gameSearchList.map((singleGame: ITADSearchResultItem) => (
+                                        <div key={singleGame.id}>
+                                            <ButtonItem
+                                                layout="below"
+                                                onClick={() =>
+                                                    handleGameSelect(
+                                                        singleGame.id,
+                                                        singleGame.plain,
+                                                        singleGame.title
+                                                    )
+                                                }
+                                            >
+                                                {singleGame.title}
+                                            </ButtonItem>
+                                        </div>
+                                    ))
+                                    : null}
+                            </div>
+                        </PanelSectionRow>
+
+                    )}
                 </ScrollableWindow>
             </div>
         </>
