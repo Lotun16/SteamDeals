@@ -1,81 +1,8 @@
-import { ButtonItem, DialogButton, Field, Focusable, Panel, PanelSection, PanelSectionRow, SteamSpinner, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
+import { ButtonItem, DialogButton, Field, Focusable, PanelSectionRow, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { ScrollableWindow } from './ScrollableWindow';
-
-const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
-const ITAD_SEARCH_SUFFIXES = {
-    search: '/v02/search/search/',
-    prices: '/v01/game/prices/',
-    lowest: '/v01/game/lowest/',
-	image: '/v01/game/info',
-}
-
-type ITADApiCallType = 'search' | 'prices' | 'lowest' | 'image';
-
-type ITADSearchResultItem = {
-    id: number,
-    plain: string,
-    title: string
-}
-
-type ITADLowestResultItem = {
-    price_new: number,
-    price_old: number,
-    price_cut: number,
-    url: string,
-    shop: {
-        id: string,
-        name: string
-    },
-    drm: string[]
-}
-
-type ITADCurrentPriceResultItem = {
-    price: number,
-    cut: number,
-    added: number,
-    shop: {
-        id: string,
-        name: string
-    },
-    urls: { 
-        game: string,
-        history: string
-    }
-}
-
-type ITADImageResultItem = {
-	title: string,
-	image: string,
-}
-
-interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
-    json: () => Promise<
-        CallType extends 'search' ? { data: { results: ITADSearchResultItem[] } } :
-        CallType extends 'prices' ? { data: { [plainName: string]: { list: ITADLowestResultItem[], urls: { game: string } } } } :
-        CallType extends 'lowest' ? { data: { [plainName: string]: ITADCurrentPriceResultItem } } :
-        CallType extends 'image' ? { data: { [plainName: string]: ITADImageResultItem } } :
-        never
-    >
-}
-    
-type ITADApiCallParams<CallType extends ITADApiCallType> = 
-    CallType extends 'search' ? { key: string, q: string, limit?: string, strict?: string } :
-    CallType extends 'prices' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, added?: string } :
-    CallType extends 'lowest' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, since?: string, until?: string, new?: string } :
-    CallType extends 'image' ? { key: string, plains: string } :
-    never;
-
-type GameData = {
-    id: string | number,
-    title: string,
-    currentPrice: string | number,
-    originalPrice: string | number,
-    originalCut: string | number,
-    lowestPrice: string | number,
-    lowestCut: string | number,
-	imageURL: string
-}
+import GameBox from "./GameBox";
+import { ITAD_SEARCH_SUFFIXES, ITAD_BASE_URL, ITADApiCallParams, ITADApiResponse, ITADApiCallType, ITADSearchResultItem, GameData } from "../models/gameModel";
 
 async function fetchITAD<CallType extends ITADApiCallType>(callType: CallType, params: ITADApiCallParams<CallType>): Promise<ITADApiResponse<CallType>> {
     const urly = new URL(ITAD_SEARCH_SUFFIXES[callType], ITAD_BASE_URL);
@@ -121,8 +48,6 @@ const SearchGame = () => {
 			const currentPriceData = await getPrice(gameData.plain, shopName);
 			const historicalLowData = await getHistoricalLow(gameData.plain, shopName);
 			const imageData = await getImage(gameData.plain)
-
-			console.log('image url: ', imageData);
 
 			return {
 				id: gameData.id,
@@ -225,7 +150,6 @@ const SearchGame = () => {
 				}
 				const searchResults = await getSearchResults(gameName);
 
-				console.log('search results: ', searchResults);
 				setGameSearchList(searchResults!);
 				setSelectedGame({
 					id: 0,
@@ -300,7 +224,6 @@ const SearchGame = () => {
 	};
 
 	const handleGameSelect = async (id: number, plain: string, title: string) => {
-		console.log("title is: ", title, "| plain is: ", plain, "| id is: ", id);
         setShowGame(true);
 		setSelectedGame({
 			id: id,
@@ -325,7 +248,7 @@ const SearchGame = () => {
             <div className='search-game-container' style={{ position: 'absolute', width: '100%', top: 'var(--basicui-header-height)', bottom: 'var(--gamepadui-current-footer-height)' }}>
                 <div ref={fixedDivRef}>
                     <h1 style={{ margin: 0, padding: '15px 20px 5px' }}> {/* margin needs to be 0 for the height calculation to be correct */}
-                        Lowest Deal Search
+                        Lowest Deal Search Test Models
                     </h1>
                     <Field description={
                         <Focusable style={{ display: "flex", flexDirection: "row", gap: '10px', padding: '0 16px' }}>
@@ -347,7 +270,7 @@ const SearchGame = () => {
                                     <img src={gameData.imageURL} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>
-                                    <h1>{gameData.title}</h1>
+                                    <h1 style={{margin: '0px', padding: '0px'}}>{gameData.title}</h1>
                                     <div>ID: {gameData.id}</div>
                                     <div>Original Price: {gameData.originalPrice}</div>
                                     <div>
@@ -389,7 +312,7 @@ const SearchGame = () => {
                                 {gameSearchList
                                     ? gameSearchList.map((singleGame: ITADSearchResultItem) => (
                                         <div key={singleGame.id}>
-                                            <ButtonItem
+                                            {/* <ButtonItem
                                                 layout="below"
                                                 onClick={() =>
                                                     handleGameSelect(
@@ -399,8 +322,9 @@ const SearchGame = () => {
                                                     )
                                                 }
                                             >
-                                                {singleGame.title}
-                                            </ButtonItem>
+                                                <GameBox game={singleGame} />
+                                            </ButtonItem> */}
+											<GameBox game={singleGame} handleSelect={handleGameSelect} getInfo={getImage}/>
                                         </div>
                                     ))
                                     : null}
