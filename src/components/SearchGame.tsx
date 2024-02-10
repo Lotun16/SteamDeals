@@ -248,7 +248,7 @@ const SearchGame = () => {
             <div className='search-game-container' style={{ position: 'absolute', width: '100%', top: 'var(--basicui-header-height)', bottom: 'var(--gamepadui-current-footer-height)' }}>
                 <div ref={fixedDivRef}>
                     <h1 style={{ margin: 0, padding: '15px 20px 5px' }}> {/* margin needs to be 0 for the height calculation to be correct */}
-                        Lowest Deal Search Test Models
+                        Lowest Deal Search
                     </h1>
                     <Field description={
                         <Focusable style={{ display: "flex", flexDirection: "row", gap: '10px', padding: '0 16px' }}>
