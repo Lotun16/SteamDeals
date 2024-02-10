@@ -40,9 +40,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
 
   return (
     <PanelSection title="Panel Section">
-      {/* <PanelSectionRow>
-        <SearchGame />
-      </PanelSectionRow> */}
       <PanelSectionRow>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <img src={logo} />
@@ -56,36 +53,8 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
               Router.Navigate("/search-game");
             }}
           >
-            Application
+            Search Game
           </ButtonItem>
-          {/* <ButtonItem
-            layout="below"
-            onClick={(e: { currentTarget: any; }) =>
-              showContextMenu(
-                <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => {}}>
-                  <MenuItem onSelected={() => {}}>Item #1</MenuItem>
-                  <MenuItem onSelected={() => {}}>Item #2</MenuItem>
-                  <MenuItem onSelected={() => {}}>Item #3</MenuItem>
-                </Menu>,
-                e.currentTarget ?? window
-              )
-            }
-          >
-            Server FGW
-          </ButtonItem> */}
-      </PanelSectionRow>
-
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => {
-            Router.CloseSideMenus();
-            Router.Navigate("/decky-plugin-test");
-          }}
-        >
-          Router
-        </ButtonItem>
-        
       </PanelSectionRow>
     </PanelSection>
   );
