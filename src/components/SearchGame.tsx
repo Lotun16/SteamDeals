@@ -34,7 +34,7 @@ const SearchGame = () => {
 		imageURL: ""
 	});
 
-	const ITAD_API_KEY = "aa1c70075662a960294dd85e1dd78cd1ad4d26f7";
+	const ITAD_API_KEY = "4234f037e6aab44f9a5932b1f3a74be647743b0b";
     const fixedDivRef = useRef<HTMLDivElement>(null);
 
     useLayoutEffect(() => {
@@ -144,12 +144,14 @@ const SearchGame = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
+				console.log('gameName: ', gameName)
 				if (gameName === "") {
 					setGameSearchList([]);
 					return;
 				}
+				console.log('gameSearchList PRE:', gameSearchList)
 				const searchResults = await getSearchResults(gameName);
-
+				console.log('gameSearchResults: ', searchResults)
 				setGameSearchList(searchResults!);
 				setSelectedGame({
 					id: 0,
@@ -312,7 +314,7 @@ const SearchGame = () => {
                                 {gameSearchList
                                     ? gameSearchList.map((singleGame: ITADSearchResultItem) => (
                                         <div key={singleGame.id}>
-                                            {/* <ButtonItem
+                                            <ButtonItem
                                                 layout="below"
                                                 onClick={() =>
                                                     handleGameSelect(
@@ -322,9 +324,9 @@ const SearchGame = () => {
                                                     )
                                                 }
                                             >
-                                                <GameBox game={singleGame} />
-                                            </ButtonItem> */}
-											<GameBox game={singleGame} handleSelect={handleGameSelect} getInfo={getImage}/>
+                                                {singleGame.title}
+                                            </ButtonItem>
+											{/* <GameBox game={singleGame} handleSelect={handleGameSelect} getInfo={getImage}/> */}
                                         </div>
                                     ))
                                     : null}

@@ -1,9 +1,15 @@
 export const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
 export const ITAD_SEARCH_SUFFIXES = {
+    //old domains
     search: '/v02/search/search/',
     prices: '/v01/game/prices/',
     lowest: '/v01/game/lowest/',
 	image: '/v01/game/info',
+    //new domains
+    // search: '/games/search/v1',
+    // prices: '/games/prices/v2',
+    // lowest: '/games/historylow/v1',
+	// image: '/v01/games/info/v2',
 }
 
 export type ITADApiCallType = 'search' | 'prices' | 'lowest' | 'image';
