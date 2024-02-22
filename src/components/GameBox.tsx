@@ -1,29 +1,31 @@
 import { ButtonItem } from "decky-frontend-lib";
-import { ITADSearchResultItem } from "../models/gameModel";
 import GameImage from "./GameImage";
+import { VFC } from 'react';
 
 
 interface GameProps {
-    game: ITADSearchResultItem
-    handleSelect: any
-    getInfo: any
+    gameId: string;
+    gameTitle: string;
+    onClick: () => void;
 }
 
-const GameBox = ({game, handleSelect, getInfo}: GameProps) => {
+const GameBox: VFC<GameProps> = ({ gameId, gameTitle, onClick }) => {
 
     return (
         <ButtonItem
             layout="below"
-            onClick={() => handleSelect(game.id,game.plain,game.title)}
+            onClick={onClick}
         >
-            <div style={{ display: 'flex', alignItems: 'center', flexBasis: 2 }}>
-                <GameImage imagePlain={game.plain} imageGetter={getInfo}/>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '30px', height: '60px' }}>
+                <div style={{ height: 'calc(100% + 20px)', marginLeft: '-24px' }}>
+                    <GameImage gameId={gameId} />
+                </div>
                 <div>
-                    <h3>{game.title}</h3>
+                    <h3>{gameTitle}</h3>
                 </div>
             </div>
         </ButtonItem>
-     );
+    );
 }
- 
+
 export default GameBox;

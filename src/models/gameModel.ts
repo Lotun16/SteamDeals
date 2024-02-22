@@ -1,80 +1,72 @@
 export const ITAD_BASE_URL = 'https://api.isthereanydeal.com';
 export const ITAD_SEARCH_SUFFIXES = {
-    //old domains
-    search: '/v02/search/search/',
-    prices: '/v01/game/prices/',
-    lowest: '/v01/game/lowest/',
-	image: '/v01/game/info',
-    //new domains
-    // search: '/games/search/v1',
-    // prices: '/games/prices/v2',
-    // lowest: '/games/historylow/v1',
-	// image: '/v01/games/info/v2',
+    search: '/games/search/v1',
+    prices: '/games/prices/v2',
+    lowest: '/games/storelow/v2',
 }
+export const ITAD_API_KEY = "4234f037e6aab44f9a5932b1f3a74be647743b0b";
 
-export type ITADApiCallType = 'search' | 'prices' | 'lowest' | 'image';
+export const ITAD_STORE_ID_STEAM = 61;
+
+export type ITADApiCallType = 'search' | 'prices' | 'lowest';
 
 export type ITADSearchResultItem = {
-    id: number,
-    plain: string,
-    title: string
+    id: string,
+    slug: string,
+    title: string,
+    type: string | null,
+    mature: boolean
 }
 
-export type ITADLowestResultItem = {
-    price_new: number,
-    price_old: number,
-    price_cut: number,
-    url: string,
-    shop: {
-        id: string,
-        name: string
-    },
-    drm: string[]
+type ITADPrice = {
+    amount: number,
+    amountInt: number,
+    currency: string,
 }
 
-export type ITADCurrentPriceResultItem = {
-    price: number,
+type ITADDeal = {
+    shop: { id: number, name: string },
+    price: ITADPrice,
+    regular: ITADPrice,
     cut: number,
-    added: number,
-    shop: {
-        id: string,
-        name: string
-    },
-    urls: { 
-        game: string,
-        history: string
-    }
+    voucher: string | null,
+    storeLow: ITADPrice | null,
+    historyLow: ITADPrice | null,
+    flag: string | null,
+    drm: { id: number, name: string }[],
+    platform: { id: number, name: string }[],
+    timestamp: string,
+    expiry: string | null,
+    url: string
 }
 
-export type ITADImageResultItem = {
-	title: string,
-	image: string,
-}
+interface ITADLow extends Pick<ITADDeal, 'shop' | 'price' | 'regular' | 'cut' | 'timestamp'> { }
 
 export interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
     json: () => Promise<
-        CallType extends 'search' ? { data: { results: ITADSearchResultItem[] } } :
-        CallType extends 'prices' ? { data: { [plainName: string]: { list: ITADLowestResultItem[], urls: { game: string } } } } :
-        CallType extends 'lowest' ? { data: { [plainName: string]: ITADCurrentPriceResultItem } } :
-        CallType extends 'image' ? { data: { [plainName: string]: ITADImageResultItem } } :
+        CallType extends 'search' ? ITADSearchResultItem[] :
+        CallType extends 'prices' ? ({ id: string, deals: ITADDeal[] } | undefined)[] : //outer array is each element per game and inner array is each element per store
+        CallType extends 'lowest' ? ({ id: string, lows: ITADLow[] } | undefined)[] :   //outer array is each element per game and inner array is each element per store
         never
     >
 }
-    
-export type ITADApiCallParams<CallType extends ITADApiCallType> = 
-    CallType extends 'search' ? { key: string, q: string, limit?: string, strict?: string } :
-    CallType extends 'prices' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, added?: string } :
-    CallType extends 'lowest' ? { key: string, plains: string, region?: string, country?: string, shops?: string, exclude?: string, since?: string, until?: string, new?: string } :
-    CallType extends 'image' ? { key: string, plains: string } :
+
+export type ITADApiCallParams<CallType extends ITADApiCallType> =
+    CallType extends 'search' ? { title: string, results?: string } :
+    CallType extends 'prices' ? { country?: string, nondeals?: boolean, vouchers?: boolean, capacity?: number, shops?: number[] } :
+    CallType extends 'lowest' ? { country?: string, shops?: number[] } :
     never;
 
-export type GameData = {
-    id: string | number,
-    title: string,
-    currentPrice: string | number,
-    originalPrice: string | number,
-    originalCut: string | number,
-    lowestPrice: string | number,
-    lowestCut: string | number,
-	imageURL: string
+export type ITADApiCallBody<CallType extends ITADApiCallType> =
+    CallType extends 'search' ? undefined :
+    CallType extends 'prices' ? string[] : //array of game ids
+    CallType extends 'lowest' ? string[] : //array of game ids
+    never;
+
+export type GamePriceData = {
+    current: number,
+    original: number,
+    originalCut: number,
+    lowest: number,
+    lowestCut: number,
 }
