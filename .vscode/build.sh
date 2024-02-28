@@ -8,3 +8,4 @@ printf "Please input sudo password to proceed.\n"
 # printf "\n"
 
 echo $sudopass | sudo $CLI_LOCATION/decky plugin build $(pwd)
+

@@ -75,7 +75,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   });
 
   return {
-    title: <div className={staticClasses.Title}>Lowest Deal</div>,
+    title: <div className={staticClasses.Title}>Steam Deals</div>,
     content: <Content serverAPI={serverApi} />, //returns the component at top of file
     icon: <FaShip />,
     onDismount() {
