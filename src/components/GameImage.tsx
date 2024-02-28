@@ -6,7 +6,6 @@ interface ImageProps {
 }
 const GameImage: VFC<ImageProps> = ({ gameId }) => {
     const [hasImage, setHasImage] = useState(true);
-    console.log('gameId: ', gameId)
 
     return (
         !hasImage ? 
