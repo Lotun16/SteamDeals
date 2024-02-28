@@ -15,6 +15,7 @@ const GameImage: VFC<ImageProps> = ({ gameId }) => {
                     alt="imageUn"
                     src={imageUnavailable}
                 />
+                <p>Image Unavailable</p>
             </div>
 
             :
