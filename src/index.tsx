@@ -39,7 +39,12 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
   // };
 
   return (
-    <PanelSection title="Panel Section">
+    <PanelSection title="Info: ">
+      <PanelSectionRow>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <p>Search a game by name to check the current sale price and historical low price on steam</p>
+        </div>
+      </PanelSectionRow>
       <PanelSectionRow>
         <ButtonItem
             layout="below"
