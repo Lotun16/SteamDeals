@@ -41,11 +41,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
   return (
     <PanelSection title="Panel Section">
       <PanelSectionRow>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img src={logo} />
-        </div>
-      </PanelSectionRow>
-      <PanelSectionRow>
         <ButtonItem
             layout="below"
             onClick={() => {
