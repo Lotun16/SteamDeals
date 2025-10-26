@@ -9,21 +9,17 @@ function useItadApi<T>(apiFunction: () => Promise<T>, enabled: boolean = true) {
 
     const execute = useCallback(async () => {
         if (!enabled) {
-            // console.log('🚫 API call skipped - not enabled');
             setData(null);
             return;
         }
         
-        // console.log('🚀 Starting API call...');
         setLoading(true);
         setError(null);
         
         try {
             const result = await apiFunction();
-            // console.log('✅ API call successful:', result);
             setData(result);
         } catch (err) {
-            // console.log('❌ API call failed:', err);
             setError(err instanceof Error ? err.message : 'API call failed');
             setData(null);
         } finally {
