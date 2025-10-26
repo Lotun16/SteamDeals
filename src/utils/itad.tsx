@@ -25,8 +25,6 @@ async function fetchITAD<CallType extends ITADApiCallType>(
 	// Add parameters if they exist
 	if (params) {
 		for (const [key, value] of Object.entries(params)) {
-			console.log("REWQ TWO Param Key: ", key);
-			console.log("REWQ Param Value: ", value);
 			if (value !== undefined) {
 				const stringValue = Array.isArray(value) ? value.join(",") : String(value);
 				urly.searchParams.append(key, stringValue);
