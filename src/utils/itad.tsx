@@ -41,7 +41,6 @@ async function fetchITAD<CallType extends ITADApiCallType>(
 
 // Function to search for games by title using the ITAD search API
 export async function getSearchResultsItad(query: string) {
-	console.log('🌐 Making network request for query:', query);
 	const params = {
 		title: query,
 		results: "10",
@@ -49,7 +48,6 @@ export async function getSearchResultsItad(query: string) {
 	try {
 		const response = await fetchITAD("search", { params });
 		const res = await response.json();
-		console.log('📦 Network response received for:', query, res);
 		return res;
 	} catch (err) {
 		console.error("❌ Network error for query:", query, err);
