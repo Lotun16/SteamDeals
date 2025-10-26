@@ -1,15 +1,14 @@
 import { DialogButton, Field, Focusable, PanelSectionRow, TextField, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
-import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { ScrollableWindow } from './ScrollableWindow';
 import GameBox from "./GameBox";
 import { ITADSearchResultItem } from "../models/gameModel";
 import { GameDetails } from './GameDetails';
-import { getSearchResultsItad } from '../utils/itad';
+import { useItadSearch } from '../hooks/useItad';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const SearchGame = () => {
     const [fieldInput, setFieldInput] = useState("");
-    const [gameSearchList, setGameSearchList] = useState<ITADSearchResultItem[]>([]);
     const [fixedDivHeight, setFixedDivHeight] = useState(0);
     const [selectedGame, setSelectedGame] = useState<{ gameId: string, gameTitle: string } | null>(null);
 
@@ -19,20 +18,9 @@ const SearchGame = () => {
         if (fixedDivRef.current) setFixedDivHeight(fixedDivRef.current.offsetHeight);
     }, []);
 
-    useEffect(() => {
-        if (fieldInput === "") {
-            setGameSearchList([]);
-            return;
-        }
-        const fetchData = async () => {
-            const searchResults = await getSearchResultsItad(fieldInput);
-            if (!searchResults) return;
+    const { data: gameSearchList, loading, error } = useItadSearch(fieldInput);
 
-            setGameSearchList(searchResults);
-        }
-        fetchData();
-    }, [fieldInput]);
-
+    console.log("REWQ Input: ", fieldInput, "Loading:", loading, "Error:", error, "Data:", gameSearchList);
     const handleInputChange = (event: any) => {
         setFieldInput(event.target.value);
         setSelectedGame(null);
@@ -41,7 +29,6 @@ const SearchGame = () => {
     const handleReset = () => {
         setFieldInput("");
         setSelectedGame(null);
-        setGameSearchList([]);
     };
 
     return (
@@ -83,7 +70,9 @@ const SearchGame = () => {
                     {selectedGame ? <GameDetails {...selectedGame} /> :
                         <PanelSectionRow>
                             <div>
-                                {gameSearchList.map((game: ITADSearchResultItem) => (
+                                {loading && <div>Searching...</div>}
+                                {error && <div>Error: {error}</div>}
+                                {gameSearchList?.map((game: ITADSearchResultItem) => (
                                     <div key={game.id}>
                                         <GameBox gameId={game.id} gameTitle={game.title} onClick={() => setSelectedGame({ gameId: game.id, gameTitle: game.title })} />
                                     </div>

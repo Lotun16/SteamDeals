@@ -9,17 +9,21 @@ function useItadApi<T>(apiFunction: () => Promise<T>, enabled: boolean = true) {
 
     const execute = useCallback(async () => {
         if (!enabled) {
+            // console.log('🚫 API call skipped - not enabled');
             setData(null);
             return;
         }
         
+        // console.log('🚀 Starting API call...');
         setLoading(true);
         setError(null);
         
         try {
             const result = await apiFunction();
+            // console.log('✅ API call successful:', result);
             setData(result);
         } catch (err) {
+            // console.log('❌ API call failed:', err);
             setError(err instanceof Error ? err.message : 'API call failed');
             setData(null);
         } finally {
@@ -36,22 +40,16 @@ function useItadApi<T>(apiFunction: () => Promise<T>, enabled: boolean = true) {
 
 // Public hooks (exported)
 export function useItadSearch(query: string) {
-    return useItadApi(
-        () => getSearchResultsItad(query),
-        !!query.trim()
-    );
+    const apiFunction = useCallback(() => getSearchResultsItad(query), [query]);
+    return useItadApi(apiFunction, !!query.trim());
 }
 
 export function useItadPrices(gameId: string, shops: number[]) {
-    return useItadApi(
-        () => getGamePricesItad(gameId, shops),
-        !!gameId && shops.length > 0
-    );
+    const apiFunction = useCallback(() => getGamePricesItad(gameId, shops), [gameId, shops]);
+    return useItadApi(apiFunction, !!gameId && shops.length > 0);
 }
 
 export function useItadHistoricalLows(gameId: string, shops: number[]) {
-    return useItadApi(
-        () => getGameHistoricalLowsItad(gameId, shops),
-        !!gameId && shops.length > 0
-    );
+    const apiFunction = useCallback(() => getGameHistoricalLowsItad(gameId, shops), [gameId, shops]);
+    return useItadApi(apiFunction, !!gameId && shops.length > 0);
 }
