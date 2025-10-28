@@ -70,7 +70,6 @@ const SearchGame = () => {
                     {selectedGame ? <GameDetails {...selectedGame} /> :
                         <PanelSectionRow>
                             <div>
-                                {loading && <div>Searching...</div>}
                                 {error && <div>Error: {error}</div>}
                                 {gameSearchList?.map((game: ITADSearchResultItem) => (
                                     <div key={game.id}>
