@@ -7,14 +7,16 @@ import { ITADSearchResultItem } from "../models/gameModel";
 import { SearchSettingsType } from "../models/pluginModel";
 import { GameDetails } from "./GameDetails";
 import { useItadSearch } from "../hooks/useItad";
-import { FaArrowLeft, FaCog } from "react-icons/fa";
+import { FaArrowLeft, FaCog, FaHistory, FaBookmark } from "react-icons/fa";
 
 interface SearchGameProps {
 	settings: SearchSettingsType;
 	onOpenSettings?: () => void;
+	onOpenRecent?: () => void;
+	onOpenTracked?: () => void;
 }
 
-const SearchGame = ({ settings, onOpenSettings }: SearchGameProps) => {
+const SearchGame = ({ settings, onOpenSettings, onOpenRecent, onOpenTracked }: SearchGameProps) => {
 	console.log("SearchGame Props - Settings:", settings);
 
 	const [fieldInput, setFieldInput] = useState("");
@@ -34,6 +36,14 @@ const SearchGame = ({ settings, onOpenSettings }: SearchGameProps) => {
 	const handleInputChange = (event: any) => {
 		setFieldInput(event.target.value);
 		setSelectedGame(null);
+	};
+
+	const handleGameSelect = (gameId: string, gameTitle: string) => {
+		const existing = JSON.parse(localStorage.getItem('steamdeals_recent') || '[]');
+		const updated = [{ gameId, gameTitle }, ...existing.filter((g: any) => g.gameId !== gameId)].slice(0, 10);
+		localStorage.setItem('steamdeals_recent', JSON.stringify(updated));
+		console.log('[SteamDeals] Recent searches:', updated);
+		setSelectedGame({ gameId, gameTitle });
 	};
 
 	const handleReset = () => {
@@ -61,13 +71,19 @@ const SearchGame = ({ settings, onOpenSettings }: SearchGameProps) => {
 				<div ref={fixedDivRef}>
 					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px 5px" }}>
 						<h1 style={{ margin: 0, padding: "15px 20px 5px" }}>Steam Deals Search</h1>
-						<div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
-							<p>Country: {settings.country}</p>
-							<p>Shop: {settings.shop}</p>
+						<Focusable style={{ display: "flex", flexDirection: "row", gap: "20px", alignItems: "center" }}>
+							<p style={{ margin: 0, whiteSpace: 'nowrap' }}>Country: {settings.country}</p>
+							<p style={{ margin: 0, whiteSpace: 'nowrap' }}>Shop: {settings.shop}</p>
+							<DialogButton style={{ display: "flex", alignItems: "center", width: "auto", minWidth: "20px" }} onClick={onOpenTracked}>
+								<FaBookmark style={{ fontSize: "20px" }} />
+							</DialogButton>
+							<DialogButton style={{ display: "flex", alignItems: "center", width: "auto", minWidth: "20px" }} onClick={onOpenRecent}>
+								<FaHistory style={{ fontSize: "20px" }} />
+							</DialogButton>
 							<DialogButton style={{ display: "flex", alignItems: "center", width: "auto", minWidth: "20px" }} onClick={onOpenSettings}>
 								<FaCog style={{ fontSize: "20px" }} />
 							</DialogButton>
-						</div>
+						</Focusable>
 					</div>
 					<Field
 						description={
@@ -101,7 +117,7 @@ const SearchGame = ({ settings, onOpenSettings }: SearchGameProps) => {
 								{error && <div>Error: {error}</div>}
 								{gameSearchList?.map((game: ITADSearchResultItem) => (
 									<div key={game.id}>
-										<GameBox gameId={game.id} gameTitle={game.title} onClick={() => setSelectedGame({ gameId: game.id, gameTitle: game.title })} />
+										<GameBox gameId={game.id} gameTitle={game.title} onClick={() => handleGameSelect(game.id, game.title)} />
 									</div>
 								))}
 							</div>

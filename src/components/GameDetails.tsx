@@ -6,17 +6,31 @@ import GamePrice from "./GamePrice";
 import HighlightText from "./HighlightText";
 import GamePriceHistory from "./GamePriceHistory";
 import { useState } from "react";
-import { DialogButton } from "decky-frontend-lib";
+import { DialogButton, Focusable } from "decky-frontend-lib";
 interface GameDetailsProps {
 	gameId: string;
 	gameTitle: string;
+	onUntrack?: () => void;
 }
 
-// Create array outside component to avoid recreating on every render
 const STEAM_SHOPS = [ITAD_STORE_ID_STEAM];
 
-export const GameDetails: VFC<GameDetailsProps> = ({ gameId, gameTitle }) => {
+export const GameDetails: VFC<GameDetailsProps> = ({ gameId, gameTitle, onUntrack }) => {
 	const [viewChart, setViewChart] = useState(false);
+	const [isTracked, setIsTracked] = useState(() => {
+		const tracked = JSON.parse(localStorage.getItem('steamdeals_tracked') || '[]');
+		return tracked.some((g: any) => g.gameId === gameId);
+	});
+
+	const toggleTracked = () => {
+		const tracked = JSON.parse(localStorage.getItem('steamdeals_tracked') || '[]');
+		const updated = isTracked
+			? tracked.filter((g: any) => g.gameId !== gameId)
+			: [{ gameId, gameTitle }, ...tracked];
+		localStorage.setItem('steamdeals_tracked', JSON.stringify(updated));
+		if (isTracked) onUntrack?.();
+		setIsTracked(!isTracked);
+	};
 
 	const toggleChart = () => {
 		setViewChart(!viewChart);
@@ -53,7 +67,10 @@ export const GameDetails: VFC<GameDetailsProps> = ({ gameId, gameTitle }) => {
 		<div style={{ padding: "25px 30px" }}>Couldn't get price data for {gameTitle}</div> //display on errors from api call or there are no price results
 	) : (
 		<div style={{ marginTop: "10px" }}>
-			<DialogButton onClick={toggleChart}>{viewChart ? "Hide" : "Show"} Game Info</DialogButton>
+			<Focusable style={{ display: 'flex', gap: '10px' }}>
+				<DialogButton onClick={toggleChart}>{viewChart ? "Hide" : "Show"} Game Info</DialogButton>
+				<DialogButton onClick={toggleTracked}>{isTracked ? "Untrack" : "Track"} Game</DialogButton>
+			</Focusable>
 			{!viewChart ? (
 				<div>
 					<div style={{ display: "flex", gap: "25px", padding: "25px 30px", height: "200px" }}>
