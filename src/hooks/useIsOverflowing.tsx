@@ -5,14 +5,16 @@ export const useIsOverflowing = (ref: MutableRefObject<HTMLElement | undefined>)
 
   useLayoutEffect(() => {
     const { current } = ref;
+    if (!current) return;
+
     const trigger = () => {
-      const hasOverflow = current!.scrollHeight > current!.clientHeight;
-      setIsOverflow(hasOverflow);
+      setIsOverflow(current.scrollHeight > current.clientHeight);
     };
 
-    if (current) {
-      trigger();
-    }
+    trigger();
+    const observer = new ResizeObserver(trigger);
+    observer.observe(current);
+    return () => observer.disconnect();
   }, [ref]);
 
   return isOverflow;
