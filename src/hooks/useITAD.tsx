@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getSearchResultsItad, getGamePricesItad, getGameHistoricalLowsItad } from "../utils/itad";
+import { getSearchResultsItad, getGamePricesItad, getGameHistoricalLowsItad, getGamePriceHistoryItad} from "../utils/itad";
 
 // Internal generic hook (not exported)
 function useItadApi<T>(apiFunction: () => Promise<T>, enabled: boolean = true) {
@@ -47,5 +47,10 @@ export function useItadPrices(gameId: string, shops: number[]) {
 
 export function useItadHistoricalLows(gameId: string, shops: number[]) {
     const apiFunction = useCallback(() => getGameHistoricalLowsItad(gameId, shops), [gameId, shops]);
+    return useItadApi(apiFunction, !!gameId && shops.length > 0);
+}
+
+export function useItadPriceHistory(gameId: string, shops: number[]) {
+    const apiFunction = useCallback(() => getGamePriceHistoryItad(gameId, shops), [gameId, shops]);
     return useItadApi(apiFunction, !!gameId && shops.length > 0);
 }

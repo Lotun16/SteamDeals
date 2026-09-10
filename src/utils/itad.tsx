@@ -45,6 +45,7 @@ export async function getSearchResultsItad(query: string) {
 		title: query,
 		results: "10",
 	};
+
 	try {
 		const response = await fetchITAD("search", { params });
 		const res = await response.json();
@@ -74,12 +75,27 @@ export async function getGamePricesItad(gameId: string, shops: number[]) {
 export async function getGameHistoricalLowsItad(gameId: string, shops: number[]) {
 	const params = { shops };
 	const body = [gameId];
+
 	try {
 		const response = await fetchITAD("lowest", { params, body });
 		const res = await response.json();
 		return res[0] ?? null; //return null specifically for no results and undefined on error
 	} catch (err) {
 		console.error("error in get game historical low: ", err);
+		return;
+	}
+}
+
+export async function getGamePriceHistoryItad(gameId: string, shops: number[]) {
+	const params = { id: gameId, shops, since: "2025-01-01T00:00:00+01:00" };
+	
+	try {
+		const response = await fetchITAD("history", { params });
+		const res = await response.json();
+		
+		return res; //return null specifically for no results and undefined on error
+	} catch (err) {
+		console.error("error in get game price history: ", err);
 		return;
 	}
 }

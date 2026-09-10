@@ -3,12 +3,13 @@ export const ITAD_SEARCH_SUFFIXES = {
     search: '/games/search/v1',
     prices: '/games/prices/v2',
     lowest: '/games/storelow/v2',
+    history: '/games/history/v2'
 }
 export const ITAD_API_KEY = "4234f037e6aab44f9a5932b1f3a74be647743b0b";
 
 export const ITAD_STORE_ID_STEAM = 61;
 
-export type ITADApiCallType = 'search' | 'prices' | 'lowest';
+export type ITADApiCallType = 'search' | 'prices' | 'lowest' | 'history';
 
 export type ITADSearchResultItem = {
     id: string,
@@ -40,6 +41,16 @@ type ITADDeal = {
     url: string
 }
 
+export type ITADHistoryItem = {
+    timestamp: string,
+    shop: { id: number, name: string },
+    deal: {
+        price: ITADPrice,
+        regular: ITADPrice,
+        cut: number
+    }
+}
+
 interface ITADLow extends Pick<ITADDeal, 'shop' | 'price' | 'regular' | 'cut' | 'timestamp'> { }
 
 export interface ITADApiResponse<CallType extends ITADApiCallType> extends Response {
@@ -47,6 +58,7 @@ export interface ITADApiResponse<CallType extends ITADApiCallType> extends Respo
         CallType extends 'search' ? ITADSearchResultItem[] :
         CallType extends 'prices' ? ({ id: string, deals: ITADDeal[] } | undefined)[] : //outer array is each element per game and inner array is each element per store
         CallType extends 'lowest' ? ({ id: string, lows: ITADLow[] } | undefined)[] :   //outer array is each element per game and inner array is each element per store
+        CallType extends 'history' ? ITADHistoryItem[] : //array of price history entries
         never
     >
 }
@@ -55,12 +67,14 @@ export type ITADApiCallParams<CallType extends ITADApiCallType> =
     CallType extends 'search' ? { title: string, results?: string } :
     CallType extends 'prices' ? { country?: string, nondeals?: boolean, vouchers?: boolean, capacity?: number, shops?: number[] } :
     CallType extends 'lowest' ? { country?: string, shops?: number[] } :
+    CallType extends 'history' ? { id: string, country?: string, shops?: number[], since?: Date | string } :
     never;
 
 export type ITADApiCallBody<CallType extends ITADApiCallType> =
     CallType extends 'search' ? undefined :
     CallType extends 'prices' ? string[] : //array of game ids
     CallType extends 'lowest' ? string[] : //array of game ids
+    CallType extends 'history' ? undefined : //GET request, no body
     never;
 
 export type GamePriceData = {

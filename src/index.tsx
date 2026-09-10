@@ -16,6 +16,7 @@ import { FaShip } from "react-icons/fa";
 
 import logo from "../assets/logo.png";
 import SearchGame from "./components/SearchGame";
+import SearchContainer from "./components/SearchContainer";
 
 // interface AddMethodArgs {
 //   left: number;
@@ -50,7 +51,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
             layout="below"
             onClick={() => {
               Router.CloseSideMenus();
-              Router.Navigate("/search-game");
+              Router.Navigate("/deal-tracker");
             }}
           >
             Search Game
@@ -75,7 +76,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   serverApi.routerHook.addRoute("/decky-plugin-test", DeckyPluginRouterTest, { //switches to other component with this
     exact: true,
   });
-  serverApi.routerHook.addRoute("/search-game", SearchGame, { //switches to other component with this
+  serverApi.routerHook.addRoute("/deal-tracker", SearchContainer, { //switches to other component with this
     exact: true,
   });
 
